@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #1a2e2a;
+  --muted: #5a6f69;
+  --bg0: #e8f0ec;
+  --bg1: #d4e4dc;
+  --surface: rgba(255, 255, 255, 0.72);
+  --line: rgba(26, 46, 42, 0.12);
+  --accent: #0f766e;
+  --accent-hover: #0d5f59;
+  --danger: #b42318;
+  --danger-soft: rgba(180, 35, 24, 0.1);
+  --warn: #9a6700;
+  --warn-soft: rgba(154, 103, 0, 0.12);
+  --background: var(--bg0);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+body {
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse 120% 80% at 10% -10%, #c5ddd4 0%, transparent 55%),
+    radial-gradient(ellipse 90% 60% at 100% 0%, #b8d0e0 0%, transparent 50%),
+    linear-gradient(165deg, var(--bg0), var(--bg1));
+  background-attachment: fixed;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.65rem 0.75rem;
+  color: var(--ink);
+  outline: none;
+}
+
+.field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.65rem;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  padding: 0.85rem 1.1rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.65rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.875rem;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(26, 46, 42, 0.06);
+  color: var(--ink);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.35;
+}
