@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     icon: "/icon-192.png",
     apple: "/icon-192.png",
   },
-  manifest: "/manifest.webmanifest",
+  manifest: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/manifest.webmanifest`,
 };
 
 export const viewport: Viewport = {

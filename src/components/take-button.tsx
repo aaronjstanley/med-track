@@ -1,17 +1,34 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { TakeDoseResult } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import type { LowStockMedicine, TakeDoseResult } from "@/lib/types";
 import { formatTime } from "@/lib/format";
 
 type Props = {
   className?: string;
   autoRun?: boolean;
+  onTaken?: () => void;
 };
 
-export function TakeButton({ className, autoRun = false }: Props) {
-  const router = useRouter();
+async function notifyLowStock(items: LowStockMedicine[]) {
+  if (!items.length) return;
+  const supabase = createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return;
+
+  try {
+    await supabase.functions.invoke("send-low-stock-push", {
+      body: { items },
+    });
+  } catch {
+    // Push is best-effort
+  }
+}
+
+export function TakeButton({ className, autoRun = false, onTaken }: Props) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<TakeDoseResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,25 +39,30 @@ export function TakeButton({ className, autoRun = false }: Props) {
     setError(null);
     setResult(null);
     try {
+      const supabase = createClient();
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const res = await fetch("/api/take", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timezone }),
+      const { data, error: rpcError } = await supabase.rpc("take_current_dose", {
+        p_timezone: timezone,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong");
+
+      if (rpcError) {
+        setError(rpcError.message);
       } else {
-        setResult(data as TakeDoseResult);
-        router.refresh();
+        const takeResult = data as TakeDoseResult;
+        setResult(takeResult);
+        if (takeResult.status === "ok") {
+          onTaken?.();
+          if (takeResult.low_stock?.length) {
+            void notifyLowStock(takeResult.low_stock);
+          }
+        }
       }
     } catch {
-      setError("Could not reach the server");
+      setError("Could not record the dose");
     } finally {
       setBusy(false);
     }
-  }, [router]);
+  }, [onTaken]);
 
   useEffect(() => {
     if (!autoRun || autoStarted.current) return;

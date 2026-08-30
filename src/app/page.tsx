@@ -1,18 +1,29 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useCallback, useEffect, useState } from "react";
+import { AuthGate } from "@/components/auth-gate";
 import { TakeButton } from "@/components/take-button";
 import { PushSetup } from "@/components/push-setup";
 import { SignOutButton } from "@/components/sign-out-button";
+import { createClient } from "@/lib/supabase/client";
 import type { Medicine } from "@/lib/types";
 
-export default async function HomePage() {
-  const supabase = await createClient();
-  const { data: medicines } = await supabase
-    .from("medicines")
-    .select("*")
-    .order("name");
+function HomeContent() {
+  const [list, setList] = useState<Medicine[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const list = (medicines ?? []) as Medicine[];
+  const load = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.from("medicines").select("*").order("name");
+    setList((data ?? []) as Medicine[]);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   const low = list.filter((m) => m.remaining_count <= m.reorder_at);
 
   return (
@@ -39,17 +50,25 @@ export default async function HomePage() {
       ) : null}
 
       <ul className="mb-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">
-        {list.length === 0 ? (
+        {loading ? (
+          <li className="py-6 text-sm text-[var(--muted)]">Loading…</li>
+        ) : list.length === 0 ? (
           <li className="py-6 text-sm text-[var(--muted)]">
             No medicines yet.{" "}
-            <Link href="/options" className="text-[var(--accent)] underline-offset-2 hover:underline">
+            <Link
+              href="/options"
+              className="text-[var(--accent)] underline-offset-2 hover:underline"
+            >
               Add some in Options
             </Link>
             .
           </li>
         ) : (
           list.map((m) => (
-            <li key={m.id} className="flex items-baseline justify-between gap-4 py-4">
+            <li
+              key={m.id}
+              className="flex items-baseline justify-between gap-4 py-4"
+            >
               <span className="text-lg text-[var(--ink)]">{m.name}</span>
               <span
                 className={`font-display text-2xl tabular-nums ${
@@ -65,11 +84,19 @@ export default async function HomePage() {
         )}
       </ul>
 
-      <TakeButton />
+      <TakeButton onTaken={load} />
 
       <div className="mt-8">
         <PushSetup />
       </div>
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <AuthGate>
+      <HomeContent />
+    </AuthGate>
   );
 }

@@ -1,81 +1,82 @@
 # Med Track
 
-Personal medicine inventory and dose tracker. Each person uses their own account — no shared data between users (you and your spouse each sign up separately).
+Personal medicine inventory and dose tracker. Hosted on **GitHub Pages**. Each person uses their own account — no shared data between users.
+
+**Live app:** https://aaronjstanley.github.io/med-track/
 
 ## Features
 
 - **Home** — list medicines and remaining counts; **Take current medicine** deducts the current time-slot
-- **Options** — add / edit / delete medicines and schedule entries; reorder schedule with Up / Down
-- **NFC (`/take`)** — program an iPhone NFC tag to open `https://<your-domain>/take` (or `http://localhost:3000/take` while testing). It records the same dose as the home button
-- **Push alerts** — when any medicine hits its reorder threshold (default 5), a Web Push notification is sent
+- **Options** — add / edit / delete medicines and schedule entries; reorder with Up / Down
+- **NFC (`/take/`)** — program an iPhone NFC tag to open `https://aaronjstanley.github.io/med-track/take/`
+- **Push alerts** — when any medicine hits its reorder threshold (default 5), a Web Push is sent via a Supabase Edge Function
 
 ## Stack
 
-- Next.js (App Router) + TypeScript
-- Supabase Auth + Postgres (RLS per user)
-- Installable PWA + Web Push (iOS 16.4+ via Home Screen)
+- Next.js static export (GitHub Pages)
+- Supabase Auth + Postgres (RLS per user) + Edge Function for push
+- Installable PWA (iOS 16.4+ Home Screen for push)
 
-## Setup
-
-1. Copy env vars:
+## Local development
 
 ```bash
 cp .env.example .env.local
-```
-
-Fill in your Supabase project URL and anon key, plus VAPID keys:
-
-```bash
-npx web-push generate-vapid-keys
-```
-
-2. Apply the SQL in [`supabase/migrations/20260830210000_init_med_track_schema.sql`](supabase/migrations/20260830210000_init_med_track_schema.sql) to your Supabase project (already applied if you used the Med Track project created for this app).
-
-3. In Supabase Dashboard → **Authentication**:
-
-- **URL Configuration** — Site URL: `http://localhost:3000` (and later your production URL). Redirect URLs: `http://localhost:3000/auth/callback`, `https://<your-domain>/auth/callback`
-- **Providers → Email** — for a personal app, turn off **Confirm email** so you can sign up and use the app immediately without inbox setup
-
-4. Install and run:
-
-```bash
+# fill NEXT_PUBLIC_SUPABASE_* and NEXT_PUBLIC_VAPID_PUBLIC_KEY
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), create an account, add medicines and a schedule.
+Open [http://localhost:3000](http://localhost:3000). Leave `NEXT_PUBLIC_BASE_PATH` unset locally.
 
-## Dual accounts (no crossover)
+## GitHub Pages deploy
 
-1. Create account A (you) → add your medicines/schedule
-2. Sign out → create account B (spouse) on the same app URL
-3. Each login only sees that user’s rows (enforced by RLS)
+Pushes to `main` run [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+
+Required **repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|--------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon / publishable key |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push VAPID public key |
+
+Pages is served at `/med-track/` (`NEXT_PUBLIC_BASE_PATH=/med-track`).
+
+## Supabase setup
+
+1. Apply [`supabase/migrations/20260830210000_init_med_track_schema.sql`](supabase/migrations/20260830210000_init_med_track_schema.sql)
+2. Deploy Edge Function `send-low-stock-push` (already in repo under `supabase/functions/`). In the [Edge Function Secrets](https://supabase.com/dashboard/project/ltryvlcrnjdfjyqcufgq/functions/secrets) page, add:
+
+   - `VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT` (e.g. `mailto:you@example.com`)
+
+   Without these, reorder push notifications will not send (inventory tracking still works).
+3. Auth → **URL Configuration**:
+   - Site URL: `https://aaronjstanley.github.io/med-track`
+   - Redirect URLs: `https://aaronjstanley.github.io/med-track/**`, `http://localhost:3000/**`
+4. Auth → Email: turn off **Confirm email** for a personal app without SMTP
+
+## Dual accounts
+
+Create separate accounts on the same URL. RLS keeps each user’s medicines private.
 
 ## iPhone: Home Screen + push
 
-1. Open the site in Safari
+1. Open the live URL in Safari
 2. Share → **Add to Home Screen**
-3. Launch from the icon (not a Safari tab)
-4. Sign in, then tap **Enable push alerts** on the home screen
-5. iOS only delivers Web Push to the installed Home Screen app
+3. Launch from the icon → sign in → **Enable push alerts**
 
 ## NFC tag
 
-Program the tag (Shortcuts / NFC Tools / etc.) to open:
-
 ```text
-https://<your-domain>/take
+https://aaronjstanley.github.io/med-track/take/
 ```
 
-You must already be signed in on that device (Safari or the Home Screen app). Scanning around e.g. 12:15 deducts every medicine scheduled for the latest slot at or before now (12:00), once per day per slot.
+Stay signed in on that device. Scanning around e.g. 12:15 deducts the latest scheduled slot at or before now (12:00), once per day per slot.
 
-## Dose matching rules
+## Dose matching
 
-- Uses your device timezone
-- Picks the latest scheduled time **≤ now**
+- Uses device timezone
+- Latest scheduled time **≤ now**
 - Same slot cannot be taken twice in one day
-- Before the first scheduled time of the day, you’ll get “no scheduled dose yet”
-
-## Deploy
-
-Deploy to Vercel (or similar), set the same env vars, update Supabase Auth URLs to the production domain, and reprogram the NFC tag to the production `/take` URL.

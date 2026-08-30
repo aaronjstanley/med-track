@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -11,6 +12,11 @@ function urlBase64ToUint8Array(base64String: string) {
     output[i] = raw.charCodeAt(i);
   }
   return output;
+}
+
+function swUrl() {
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  return `${base}/sw.js`;
 }
 
 export function PushSetup() {
@@ -37,7 +43,7 @@ export function PushSetup() {
       return;
     }
 
-    void navigator.serviceWorker.register("/sw.js");
+    void navigator.serviceWorker.register(swUrl());
 
     void navigator.serviceWorker.ready.then(async (reg) => {
       const sub = await reg.pushManager.getSubscription();
@@ -65,11 +71,32 @@ export function PushSetup() {
           ),
         }));
 
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sub.toJSON()),
-      });
+      const json = sub.toJSON();
+      const endpoint = json.endpoint;
+      const p256dh = json.keys?.p256dh;
+      const auth = json.keys?.auth;
+
+      if (!endpoint || !p256dh || !auth) {
+        throw new Error("Invalid subscription");
+      }
+
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not signed in");
+
+      const { error } = await supabase.from("push_subscriptions").upsert(
+        {
+          user_id: user.id,
+          endpoint,
+          p256dh,
+          auth,
+        },
+        { onConflict: "user_id,endpoint" },
+      );
+
+      if (error) throw error;
       setStatus("on");
     } catch {
       setStatus("unsupported");

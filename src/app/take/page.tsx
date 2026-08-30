@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { AuthGate } from "@/components/auth-gate";
 import { TakeButton } from "@/components/take-button";
 
-export default function TakePage() {
+function TakeContent() {
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-10">
       <h1 className="font-display text-3xl tracking-tight text-[var(--ink)]">
@@ -20,5 +23,13 @@ export default function TakePage() {
         Back to home
       </Link>
     </main>
+  );
+}
+
+export default function TakePage() {
+  return (
+    <AuthGate>
+      <TakeContent />
+    </AuthGate>
   );
 }

@@ -1,19 +1,41 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useCallback, useEffect, useState } from "react";
+import { AuthGate } from "@/components/auth-gate";
 import { OptionsClient } from "@/components/options-client";
+import { createClient } from "@/lib/supabase/client";
 import type { Medicine, ScheduleEntry } from "@/lib/types";
 
-export default async function OptionsPage() {
-  const supabase = await createClient();
+function OptionsContent() {
+  const [medicines, setMedicines] = useState<Medicine[] | null>(null);
+  const [schedule, setSchedule] = useState<ScheduleEntry[] | null>(null);
 
-  const [{ data: medicines }, { data: schedule }] = await Promise.all([
-    supabase.from("medicines").select("*").order("name"),
-    supabase
-      .from("schedule_entries")
-      .select("*, medicines(id, name, remaining_count)")
-      .order("scheduled_time")
-      .order("sort_order"),
-  ]);
+  const load = useCallback(async () => {
+    const supabase = createClient();
+    const [{ data: meds }, { data: sched }] = await Promise.all([
+      supabase.from("medicines").select("*").order("name"),
+      supabase
+        .from("schedule_entries")
+        .select("*, medicines(id, name, remaining_count)")
+        .order("scheduled_time")
+        .order("sort_order"),
+    ]);
+    setMedicines((meds ?? []) as Medicine[]);
+    setSchedule((sched ?? []) as ScheduleEntry[]);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (!medicines || !schedule) {
+    return (
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-8">
+        <p className="text-[var(--muted)]">Loading…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-8">
@@ -30,10 +52,15 @@ export default async function OptionsPage() {
         </div>
       </header>
 
-      <OptionsClient
-        medicines={(medicines ?? []) as Medicine[]}
-        schedule={(schedule ?? []) as ScheduleEntry[]}
-      />
+      <OptionsClient medicines={medicines} schedule={schedule} />
     </main>
+  );
+}
+
+export default function OptionsPage() {
+  return (
+    <AuthGate>
+      <OptionsContent />
+    </AuthGate>
   );
 }
