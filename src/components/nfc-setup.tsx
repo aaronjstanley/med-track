@@ -2,50 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-function randomToken() {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-}
+import {
+  clearStoredNfcToken,
+  createNfcToken,
+  getStoredNfcToken,
+  storeNfcToken,
+} from "@/lib/nfc-token";
 
 export function NfcSetup() {
   const supabase = useMemo(() => createClient(), []);
-  const [hasToken, setHasToken] = useState<boolean | null>(null);
-  const [plainToken, setPlainToken] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+  const [deviceReady, setDeviceReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const takeUrl = useMemo(() => {
-    if (!plainToken || typeof window === "undefined") return null;
-    const base = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ""}`;
-    return `${base.replace(/\/$/, "")}/take/?t=${plainToken}`;
-  }, [plainToken]);
 
   useEffect(() => {
-    void (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setHasToken(false);
-        return;
-      }
-      const { data } = await supabase
-        .from("profiles")
-        .select("nfc_token_hash")
-        .eq("id", user.id)
-        .maybeSingle();
-      setHasToken(Boolean(data?.nfc_token_hash));
-    })();
-  }, [supabase]);
+    setDeviceReady(Boolean(getStoredNfcToken()));
+    setReady(true);
+  }, []);
 
-  async function generate() {
+  async function enableOnThisSafari() {
     setBusy(true);
     setError(null);
-    setCopied(false);
-    const token = randomToken();
+    const token = createNfcToken();
     const { error: err } = await supabase.rpc("rotate_nfc_token", {
       p_token: token,
     });
@@ -54,38 +33,35 @@ export function NfcSetup() {
       setBusy(false);
       return;
     }
-    setPlainToken(token);
-    setHasToken(true);
+    storeNfcToken(token);
+    setDeviceReady(true);
     setBusy(false);
   }
 
-  async function clearToken() {
-    if (!confirm("Disable the NFC link? Existing tag URLs will stop working.")) {
+  async function disableOnThisSafari() {
+    if (
+      !confirm(
+        "Remove NFC auto-take from this Safari? Your tag can stay as /take/, but scans will ask you to sign in again until you re-enable.",
+      )
+    ) {
       return;
     }
     setBusy(true);
     setError(null);
+    clearStoredNfcToken();
     const { error: err } = await supabase.rpc("clear_nfc_token");
     if (err) setError(err.message);
-    else {
-      setHasToken(false);
-      setPlainToken(null);
-    }
+    setDeviceReady(false);
     setBusy(false);
-  }
-
-  async function copyUrl() {
-    if (!takeUrl) return;
-    await navigator.clipboard.writeText(takeUrl);
-    setCopied(true);
   }
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-[var(--muted)]">
-        iPhone NFC opens Safari, which does not share login with the Home Screen
-        app. Use a personal take link on the tag so a scan records the dose
-        without signing in.
+        Keep your tag as{" "}
+        <span className="font-medium text-[var(--ink)]">/take/</span>. NFC opens
+        Safari (not the Home Screen app). Sign in once in Safari — then scans
+        record a dose without logging in again. No need to rewrite the tag.
       </p>
 
       {error ? (
@@ -94,16 +70,16 @@ export function NfcSetup() {
         </p>
       ) : null}
 
-      {hasToken === null ? (
+      {!ready ? (
         <p className="text-sm text-[var(--muted)]">Loading…</p>
       ) : (
         <>
           <p className="text-sm text-[var(--ink)]">
-            Status:{" "}
-            {hasToken ? (
-              <span className="text-[var(--accent)]">NFC link active</span>
+            This Safari:{" "}
+            {deviceReady ? (
+              <span className="text-[var(--accent)]">ready for NFC scans</span>
             ) : (
-              <span className="text-[var(--muted)]">No NFC link yet</span>
+              <span className="text-[var(--muted)]">needs setup</span>
             )}
           </p>
 
@@ -112,48 +88,23 @@ export function NfcSetup() {
               type="button"
               className="btn-primary"
               disabled={busy}
-              onClick={generate}
+              onClick={enableOnThisSafari}
             >
-              {hasToken ? "Generate new link" : "Generate NFC link"}
+              {deviceReady
+                ? "Refresh NFC for this Safari"
+                : "Enable NFC on this Safari"}
             </button>
-            {hasToken ? (
+            {deviceReady ? (
               <button
                 type="button"
                 className="btn-secondary"
                 disabled={busy}
-                onClick={clearToken}
+                onClick={disableOnThisSafari}
               >
-                Disable link
+                Disable
               </button>
             ) : null}
           </div>
-
-          {plainToken && takeUrl ? (
-            <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
-              <p className="text-sm font-medium text-[var(--ink)]">
-                Copy this once into NFC Tools / Shortcuts
-              </p>
-              <p className="mt-2 break-all font-mono text-xs text-[var(--muted)]">
-                {takeUrl}
-              </p>
-              <button
-                type="button"
-                className="btn-secondary mt-3"
-                onClick={copyUrl}
-              >
-                {copied ? "Copied" : "Copy URL"}
-              </button>
-              <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
-                Anyone with this URL can record a dose as you. Treat it like a
-                password. Generating a new link invalidates the old one.
-              </p>
-            </div>
-          ) : hasToken ? (
-            <p className="text-xs text-[var(--muted)]">
-              The full URL is only shown when you generate it. Create a new link
-              if you need to rewrite your tag.
-            </p>
-          ) : null}
         </>
       )}
     </div>

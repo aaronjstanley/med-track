@@ -1,27 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { TakeButton } from "@/components/take-button";
+import { createClient } from "@/lib/supabase/client";
+import { getStoredNfcToken } from "@/lib/nfc-token";
 
-function TakeContent() {
-  const searchParams = useSearchParams();
-  const nfcToken = useMemo(() => {
-    const t = searchParams.get("t")?.trim();
-    return t && t.length >= 20 ? t : null;
-  }, [searchParams]);
-
+function TakeContent({ nfcToken }: { nfcToken: string | null }) {
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-10">
       <h1 className="font-display text-3xl tracking-tight text-[var(--ink)]">
         Taking dose
       </h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
-        {nfcToken
-          ? "Recording via your NFC link…"
-          : "Checking the current schedule for your time…"}
+        Checking the current schedule for your time…
       </p>
 
       <TakeButton autoRun nfcToken={nfcToken} className="mt-8" />
@@ -37,16 +30,45 @@ function TakeContent() {
 }
 
 function TakePageInner() {
-  const searchParams = useSearchParams();
-  const hasToken = Boolean(searchParams.get("t")?.trim());
+  const [ready, setReady] = useState(false);
+  const [nfcToken, setNfcToken] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState(false);
 
-  if (hasToken) {
-    return <TakeContent />;
+  useEffect(() => {
+    void (async () => {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setHasSession(Boolean(session));
+      setNfcToken(getStoredNfcToken());
+      setReady(true);
+    })();
+  }, []);
+
+  if (!ready) {
+    return (
+      <main className="mx-auto flex w-full max-w-lg flex-1 items-center justify-center px-5 py-10">
+        <p className="text-[var(--muted)]">Loading…</p>
+      </main>
+    );
+  }
+
+  if (hasSession) {
+    return (
+      <AuthGate>
+        <TakeContent nfcToken={null} />
+      </AuthGate>
+    );
+  }
+
+  if (nfcToken) {
+    return <TakeContent nfcToken={nfcToken} />;
   }
 
   return (
     <AuthGate>
-      <TakeContent />
+      <TakeContent nfcToken={null} />
     </AuthGate>
   );
 }

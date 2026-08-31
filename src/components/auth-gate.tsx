@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { NfcTokenSync } from "@/components/nfc-token-sync";
 import type { User } from "@supabase/supabase-js";
 
 export function AuthGate({
@@ -36,7 +37,10 @@ export function AuthGate({
     if (user === undefined) return;
 
     if (requireAuth && !user) {
-      const next = pathname && pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
+      const next =
+        pathname && pathname !== "/"
+          ? `?next=${encodeURIComponent(pathname)}`
+          : "";
       router.replace(`/login${next}`);
       return;
     }
@@ -70,5 +74,10 @@ export function AuthGate({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {user ? <NfcTokenSync /> : null}
+      {children}
+    </>
+  );
 }

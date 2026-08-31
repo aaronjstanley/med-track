@@ -3,6 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import {
+  createNfcToken,
+  storeNfcToken,
+} from "@/lib/nfc-token";
 
 export function LoginForm() {
   const router = useRouter();
@@ -15,6 +19,15 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  async function ensureSafariNfcToken() {
+    const supabase = createClient();
+    const token = createNfcToken();
+    const { error: tokenError } = await supabase.rpc("rotate_nfc_token", {
+      p_token: token,
+    });
+    if (!tokenError) storeNfcToken(token);
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -33,6 +46,7 @@ export function LoginForm() {
         setBusy(false);
         return;
       }
+      await ensureSafariNfcToken();
       router.replace(next);
       return;
     }
@@ -64,6 +78,7 @@ export function LoginForm() {
     }
 
     if (data.session) {
+      await ensureSafariNfcToken();
       router.replace(next);
       return;
     }
