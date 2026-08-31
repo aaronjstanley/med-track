@@ -22,7 +22,7 @@ const links = [
   {
     href: "/options/nfc",
     title: "NFC",
-    description: "One-time Safari setup so /take/ works without logging in",
+    description: "One-tap Shortcuts setup (no Safari)",
   },
 ] as const;
 
