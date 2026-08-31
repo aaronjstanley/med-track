@@ -50,6 +50,7 @@ export type TakeDoseResult =
   | {
       status: "already_taken";
       scheduled_time: string;
+      dose_date?: string;
       message: string;
     }
   | {

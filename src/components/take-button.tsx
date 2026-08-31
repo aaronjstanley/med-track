@@ -137,7 +137,7 @@ export function TakeButton({
 
       {result?.status === "already_taken" ? (
         <p className="mt-3 rounded-md bg-[var(--surface)] px-3 py-2 text-sm text-[var(--muted)]">
-          Already taken for {formatTime(result.scheduled_time)} today.
+          Already taken for {formatTime(result.scheduled_time)}.
         </p>
       ) : null}
 
