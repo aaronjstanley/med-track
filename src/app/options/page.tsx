@@ -19,6 +19,11 @@ const links = [
     title: "Log",
     description: "History of doses from the button or NFC",
   },
+  {
+    href: "/options/nfc",
+    title: "NFC",
+    description: "Personal take link so scans skip signing in",
+  },
 ] as const;
 
 function OptionsMenu() {

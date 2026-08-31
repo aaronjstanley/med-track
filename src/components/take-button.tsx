@@ -9,6 +9,8 @@ type Props = {
   className?: string;
   autoRun?: boolean;
   onTaken?: () => void;
+  /** Personal NFC token — takes dose without a browser login session */
+  nfcToken?: string | null;
 };
 
 async function notifyLowStock(items: LowStockMedicine[]) {
@@ -28,7 +30,12 @@ async function notifyLowStock(items: LowStockMedicine[]) {
   }
 }
 
-export function TakeButton({ className, autoRun = false, onTaken }: Props) {
+export function TakeButton({
+  className,
+  autoRun = false,
+  onTaken,
+  nfcToken = null,
+}: Props) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<TakeDoseResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,20 +48,34 @@ export function TakeButton({ className, autoRun = false, onTaken }: Props) {
     try {
       const supabase = createClient();
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const { data, error: rpcError } = await supabase.rpc("take_current_dose", {
-        p_timezone: timezone,
-        p_source: autoRun ? "nfc" : "button",
-      });
+
+      let data: TakeDoseResult | null = null;
+      let rpcError: { message: string } | null = null;
+
+      if (nfcToken) {
+        const res = await supabase.rpc("take_dose_by_nfc_token", {
+          p_token: nfcToken,
+          p_timezone: timezone,
+        });
+        data = res.data as TakeDoseResult | null;
+        rpcError = res.error;
+      } else {
+        const res = await supabase.rpc("take_current_dose", {
+          p_timezone: timezone,
+          p_source: autoRun ? "nfc" : "button",
+        });
+        data = res.data as TakeDoseResult | null;
+        rpcError = res.error;
+      }
 
       if (rpcError) {
         setError(rpcError.message);
-      } else {
-        const takeResult = data as TakeDoseResult;
-        setResult(takeResult);
-        if (takeResult.status === "ok") {
+      } else if (data) {
+        setResult(data);
+        if (data.status === "ok") {
           onTaken?.();
-          if (takeResult.low_stock?.length) {
-            void notifyLowStock(takeResult.low_stock);
+          if (data.low_stock?.length) {
+            void notifyLowStock(data.low_stock);
           }
         }
       }
@@ -63,7 +84,7 @@ export function TakeButton({ className, autoRun = false, onTaken }: Props) {
     } finally {
       setBusy(false);
     }
-  }, [autoRun, onTaken]);
+  }, [autoRun, nfcToken, onTaken]);
 
   useEffect(() => {
     if (!autoRun || autoStarted.current) return;

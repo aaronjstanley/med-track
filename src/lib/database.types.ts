@@ -89,15 +89,18 @@ export type Database = {
         Row: {
           id: string;
           timezone: string;
+          nfc_token_hash: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           timezone?: string;
+          nfc_token_hash?: string | null;
         };
         Update: {
           timezone?: string;
+          nfc_token_hash?: string | null;
         };
         Relationships: [];
       };
@@ -107,6 +110,18 @@ export type Database = {
       take_current_dose: {
         Args: { p_timezone?: string; p_source?: string };
         Returns: TakeDoseResult;
+      };
+      take_dose_by_nfc_token: {
+        Args: { p_token: string; p_timezone?: string };
+        Returns: TakeDoseResult;
+      };
+      rotate_nfc_token: {
+        Args: { p_token: string };
+        Returns: { status: string };
+      };
+      clear_nfc_token: {
+        Args: Record<string, never>;
+        Returns: { status: string };
       };
       undo_dose_batch: {
         Args: { p_log_id: string };
