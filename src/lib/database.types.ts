@@ -108,6 +108,14 @@ export type Database = {
         Args: { p_timezone?: string; p_source?: string };
         Returns: TakeDoseResult;
       };
+      undo_dose_batch: {
+        Args: { p_log_id: string };
+        Returns: { status: string; deleted: string };
+      };
+      undo_dose_medicine: {
+        Args: { p_log_id: string; p_medicine_id: string };
+        Returns: { status: string; deleted: string; remaining?: DeductedMedicine[] };
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
