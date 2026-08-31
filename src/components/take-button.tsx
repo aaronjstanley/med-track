@@ -43,6 +43,7 @@ export function TakeButton({ className, autoRun = false, onTaken }: Props) {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const { data, error: rpcError } = await supabase.rpc("take_current_dose", {
         p_timezone: timezone,
+        p_source: autoRun ? "nfc" : "button",
       });
 
       if (rpcError) {
@@ -62,7 +63,7 @@ export function TakeButton({ className, autoRun = false, onTaken }: Props) {
     } finally {
       setBusy(false);
     }
-  }, [onTaken]);
+  }, [autoRun, onTaken]);
 
   useEffect(() => {
     if (!autoRun || autoStarted.current) return;

@@ -24,6 +24,16 @@ export type DeductedMedicine = {
   remaining_count: number;
 };
 
+export type DoseLog = {
+  id: string;
+  user_id: string;
+  dose_date: string;
+  scheduled_time: string;
+  taken_at: string;
+  medicines_taken: DeductedMedicine[];
+  source: "button" | "nfc";
+};
+
 export type LowStockMedicine = DeductedMedicine & {
   reorder_at: number;
 };
@@ -35,6 +45,7 @@ export type TakeDoseResult =
       dose_date: string;
       deducted: DeductedMedicine[];
       low_stock: LowStockMedicine[];
+      source?: "button" | "nfc";
     }
   | {
       status: "already_taken";

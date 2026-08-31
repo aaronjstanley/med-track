@@ -1,4 +1,4 @@
-import type { Medicine, ScheduleEntry, TakeDoseResult } from "@/lib/types";
+import type { DeductedMedicine, Medicine, ScheduleEntry, TakeDoseResult } from "@/lib/types";
 
 export type Database = {
   public: {
@@ -70,6 +70,8 @@ export type Database = {
           dose_date: string;
           scheduled_time: string;
           taken_at: string;
+          medicines_taken: DeductedMedicine[];
+          source: "button" | "nfc";
         };
         Insert: {
           id?: string;
@@ -77,6 +79,8 @@ export type Database = {
           dose_date: string;
           scheduled_time: string;
           taken_at?: string;
+          medicines_taken?: DeductedMedicine[];
+          source?: "button" | "nfc";
         };
         Update: Record<string, never>;
         Relationships: [];
@@ -101,7 +105,7 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       take_current_dose: {
-        Args: { p_timezone?: string };
+        Args: { p_timezone?: string; p_source?: string };
         Returns: TakeDoseResult;
       };
     };
