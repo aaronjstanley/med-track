@@ -118,7 +118,7 @@ export function PushSetup() {
       <p className="text-sm font-medium text-[var(--ink)]">Reorder alerts</p>
       {!standalone ? (
         <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-          On iPhone: Share → Add to Home Screen, then open Med Track from the
+          On iPhone: Share → Add to Home Screen, then open MedTrack from the
           icon and enable alerts.
         </p>
       ) : null}

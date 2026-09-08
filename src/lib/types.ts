@@ -31,7 +31,7 @@ export type DoseLog = {
   scheduled_time: string;
   taken_at: string;
   medicines_taken: DeductedMedicine[];
-  source: "button" | "nfc";
+  source: "button" | "nfc" | "manual";
 };
 
 export type LowStockMedicine = DeductedMedicine & {
@@ -45,7 +45,7 @@ export type TakeDoseResult =
       dose_date: string;
       deducted: DeductedMedicine[];
       low_stock: LowStockMedicine[];
-      source?: "button" | "nfc";
+      source?: "button" | "nfc" | "manual";
     }
   | {
       status: "already_taken";
@@ -55,5 +55,9 @@ export type TakeDoseResult =
     }
   | {
       status: "no_slot";
+      message: string;
+    }
+  | {
+      status: "invalid";
       message: string;
     };

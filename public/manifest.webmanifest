@@ -1,6 +1,6 @@
 {
-  "name": "Med Track",
-  "short_name": "Med Track",
+  "name": "MedTrack",
+  "short_name": "MedTrack",
   "description": "Track medicine inventory and daily doses",
   "start_url": "./",
   "scope": "./",
@@ -20,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "./MedTrack.png",
+      "sizes": "800x800",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

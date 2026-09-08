@@ -2,8 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { AddMissedDose } from "@/components/add-missed-dose";
 import { formatTime } from "@/lib/format";
 import type { DoseLog } from "@/lib/types";
+
+function formatSource(source: DoseLog["source"]): string {
+  if (source === "nfc") return "NFC";
+  if (source === "manual") return "Manual";
+  return "Button";
+}
 
 function formatTakenAt(iso: string): string {
   const d = new Date(iso);
@@ -90,9 +97,11 @@ export function DoseLogList() {
   return (
     <div>
       <p className="text-sm text-[var(--muted)]">
-        Doses grouped by when they were taken (button or NFC). Deleting restores
-        inventory counts.
+        Doses grouped by when they were taken. Deleting restores inventory
+        counts.
       </p>
+
+      <AddMissedDose onAdded={load} />
 
       {error ? (
         <p className="mt-4 rounded-md bg-[var(--danger-soft)] px-3 py-2 text-sm text-[var(--danger)]">
@@ -124,7 +133,7 @@ export function DoseLogList() {
                     <p className="mt-0.5 text-xs text-[var(--muted)]">
                       Scheduled {formatTime(log.scheduled_time)}
                       {" · "}
-                      {log.source === "nfc" ? "NFC" : "Button"}
+                      {formatSource(log.source)}
                     </p>
                   </div>
                   <button

@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
         : `Time to reorder: ${items.map((i) => `${i.name} (${i.remaining_count})`).join(", ")}`;
 
     const payload = JSON.stringify({
-      title: "Med Track — reorder soon",
+      title: "MedTrack — reorder soon",
       body: pushBody,
       url: "/",
     });

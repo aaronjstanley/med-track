@@ -1,4 +1,4 @@
-# Med Track
+# MedTrack
 
 Personal medicine inventory and dose tracker. Hosted on **GitHub Pages**. Each person uses their own account — no shared data between users.
 

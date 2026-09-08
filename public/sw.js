@@ -1,4 +1,4 @@
-/* Med Track service worker — push + offline shell */
+/* MedTrack service worker — push + offline shell */
 const BASE = self.registration.scope;
 
 self.addEventListener("install", (event) => {
@@ -26,7 +26,7 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   let data = {
-    title: "Med Track",
+    title: "MedTrack",
     body: "Time to reorder a medicine",
     url: BASE,
   };
@@ -41,7 +41,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: `${BASE}icon-192.png`,
+      icon: `${BASE}MedTrack.png`,
       badge: `${BASE}icon-192.png`,
       data: { url: data.url || BASE },
     }),

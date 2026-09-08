@@ -14,17 +14,20 @@ const body = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Med Track",
+  title: "MedTrack",
   description: "Track medicine inventory and daily dose schedules",
-  applicationName: "Med Track",
+  applicationName: "MedTrack",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Med Track",
+    title: "MedTrack",
   },
   icons: {
-    icon: "/icon-192.png",
-    apple: "/icon-192.png",
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/MedTrack.png", sizes: "800x800", type: "image/png" },
+    ],
+    apple: "/MedTrack.png",
   },
   manifest: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/manifest.webmanifest`,
 };

@@ -71,7 +71,7 @@ export type Database = {
           scheduled_time: string;
           taken_at: string;
           medicines_taken: DeductedMedicine[];
-          source: "button" | "nfc";
+          source: "button" | "nfc" | "manual";
         };
         Insert: {
           id?: string;
@@ -80,7 +80,7 @@ export type Database = {
           scheduled_time: string;
           taken_at?: string;
           medicines_taken?: DeductedMedicine[];
-          source?: "button" | "nfc";
+          source?: "button" | "nfc" | "manual";
         };
         Update: Record<string, never>;
         Relationships: [];
@@ -130,6 +130,14 @@ export type Database = {
       undo_dose_medicine: {
         Args: { p_log_id: string; p_medicine_id: string };
         Returns: { status: string; deleted: string; remaining?: DeductedMedicine[] };
+      };
+      log_dose_for_slot: {
+        Args: {
+          p_dose_date: string;
+          p_scheduled_time: string;
+          p_taken_at?: string;
+        };
+        Returns: TakeDoseResult;
       };
     };
     Enums: Record<string, never>;

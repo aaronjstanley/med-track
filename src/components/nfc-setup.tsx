@@ -94,7 +94,7 @@ export function NfcSetup() {
         <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
           Opening a website from NFC will never feel as fast as the in-app
           button. On iPhone, use an <strong className="text-[var(--ink)]">Apple Shortcut</strong> that
-          talks to Med Track directly — no Safari, no login screen.
+          talks to MedTrack directly — no Safari, no login screen.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
           For that to work cleanly, remove the URL from the tag (or leave the
@@ -229,7 +229,7 @@ export function NfcSetup() {
         </p>
         <p className="text-sm leading-relaxed text-[var(--muted)]">
           The in-app <span className="text-[var(--ink)]">Take current medicine</span>{" "}
-          button stays for when you are already in Med Track.
+          button stays for when you are already in MedTrack.
         </p>
       </section>
     </div>

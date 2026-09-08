@@ -31,7 +31,7 @@ function HomeContent() {
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-4xl tracking-tight text-[var(--ink)]">
-            Med Track
+            MedTrack
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">What you have left</p>
         </div>
