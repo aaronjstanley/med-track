@@ -10,7 +10,7 @@ import {
 } from "@/lib/nfc-token";
 
 const FUNCTION_URL =
-  "https://ltryvlcrnjdfjyqcufgq.supabase.co/functions/v1/nfc-take";
+  "https://br-jolly-smoke-be4q523r-nfctake.compute.c-9.us-east-2.aws.neon.tech/";
 
 export function NfcSetup() {
   const supabase = useMemo(() => createClient(), []);

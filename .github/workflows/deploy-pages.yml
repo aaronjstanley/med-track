@@ -33,9 +33,9 @@ jobs:
       - name: Build static site
         env:
           NEXT_PUBLIC_BASE_PATH: /med-track
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_NEON_URL: https://ep-plain-recipe-bejcx6c5.c-9.us-east-2.aws.neon.tech/neondb
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_PUSH_FUNCTION_URL: ${{ secrets.NEXT_PUBLIC_PUSH_FUNCTION_URL }}
         run: npm run build
 
       - name: Upload Pages artifact

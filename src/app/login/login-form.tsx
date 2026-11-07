@@ -65,18 +65,6 @@ export function LoginForm() {
       return;
     }
 
-    // Existing account: Supabase often returns a user with no identities
-    // and no session, without sending another confirmation email.
-    const identities = data.user?.identities ?? [];
-    if (data.user && identities.length === 0) {
-      setError(
-        "An account with this email already exists. Switch to Sign in, or reset your password from Supabase if you forgot it.",
-      );
-      setMode("signin");
-      setBusy(false);
-      return;
-    }
-
     if (data.session) {
       await ensureSafariNfcToken();
       router.replace(next);
@@ -84,7 +72,7 @@ export function LoginForm() {
     }
 
     setInfo(
-      `Check your email (${email}) for a confirmation link. After you confirm, come back here and sign in. If nothing arrives in a few minutes, check spam — or ask to turn off email confirmation for this personal app.`,
+      `Account created for ${email}. If email verification is enabled, check your inbox before signing in.`,
     );
     setBusy(false);
   }

@@ -15,15 +15,23 @@ type Props = {
 
 async function notifyLowStock(items: LowStockMedicine[]) {
   if (!items.length) return;
-  const supabase = createClient();
+  const functionUrl = process.env.NEXT_PUBLIC_PUSH_FUNCTION_URL;
+  if (!functionUrl) return;
+
+  const client = createClient();
   const {
     data: { session },
-  } = await supabase.auth.getSession();
+  } = await client.auth.getSession();
   if (!session) return;
 
   try {
-    await supabase.functions.invoke("send-low-stock-push", {
-      body: { items },
+    await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ items }),
     });
   } catch {
     // Push is best-effort

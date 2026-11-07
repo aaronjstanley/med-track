@@ -9,19 +9,19 @@ Personal medicine inventory and dose tracker. Hosted on **GitHub Pages**. Each p
 - **Home** — list medicines and remaining counts; **Take current medicine** deducts the current time-slot
 - **Options** — add / edit / delete medicines and schedule entries; reorder with Up / Down
 - **NFC (`/take/`)** — program an iPhone NFC tag to open `https://aaronjstanley.github.io/med-track/take/`
-- **Push alerts** — when any medicine hits its reorder threshold (default 5), a Web Push is sent via a Supabase Edge Function
+- **Push alerts** — subscriptions are stored in Neon; delivery requires a configured push Function endpoint
 
 ## Stack
 
 - Next.js static export (GitHub Pages)
-- Supabase Auth + Postgres (RLS per user) + Edge Function for push
+- Neon Auth + Lakebase Postgres Data API (RLS per user)
 - Installable PWA (iOS 16.4+ Home Screen for push)
 
 ## Local development
 
 ```bash
 cp .env.example .env.local
-# fill NEXT_PUBLIC_SUPABASE_* and NEXT_PUBLIC_VAPID_PUBLIC_KEY
+# fill NEXT_PUBLIC_VAPID_PUBLIC_KEY when using push notifications
 npm install
 npm run dev
 ```
@@ -36,26 +36,33 @@ Required **repository secrets** (Settings → Secrets and variables → Actions)
 
 | Secret | Value |
 |--------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon / publishable key |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push VAPID public key |
+| `NEXT_PUBLIC_PUSH_FUNCTION_URL` | Optional compatible push Function endpoint |
 
 Pages is served at `/med-track/` (`NEXT_PUBLIC_BASE_PATH=/med-track`).
 
-## Supabase setup
+## Neon setup
 
-1. Apply [`supabase/migrations/20260830210000_init_med_track_schema.sql`](supabase/migrations/20260830210000_init_med_track_schema.sql)
-2. Deploy Edge Function `send-low-stock-push` (already in repo under `supabase/functions/`). In the [Edge Function Secrets](https://supabase.com/dashboard/project/ltryvlcrnjdfjyqcufgq/functions/secrets) page, add:
+This repo is linked to the same Neon project and `main` branch as
+`storage-scan`. Apply
+[`neon/migrations/001_med_track_schema.sql`](neon/migrations/001_med_track_schema.sql)
+with a direct (`DATABASE_URL_UNPOOLED`) connection.
 
-   - `VAPID_PUBLIC_KEY`
-   - `VAPID_PRIVATE_KEY`
-   - `VAPID_SUBJECT` (e.g. `mailto:you@example.com`)
+The browser uses `NEXT_PUBLIC_NEON_URL`; never expose `DATABASE_URL` in the
+browser or commit `.env.local`.
 
-   Without these, reorder push notifications will not send (inventory tracking still works).
-3. Auth → **URL Configuration**:
-   - Site URL: `https://aaronjstanley.github.io/med-track`
-   - Redirect URLs: `https://aaronjstanley.github.io/med-track/**`, `http://localhost:3000/**`
-4. Auth → Email: turn off **Confirm email** for a personal app without SMTP
+Supabase password hashes are not compatible with Neon Auth. Existing users
+must create new Neon accounts. Data exported from Supabase must be reassigned
+to those new user IDs before import.
+
+The `nfctake` Neon Function is deployed from
+[`neon/functions/nfc-take.ts`](neon/functions/nfc-take.ts) and preserves the
+Apple Shortcuts NFC workflow.
+
+Low-stock push delivery remains optional until `NEXT_PUBLIC_PUSH_FUNCTION_URL`
+points to a function that validates Neon Auth tokens and sends Web Push using
+the VAPID private key. Inventory tracking, dose logging, and push subscription
+storage work without it.
 
 ## Dual accounts
 

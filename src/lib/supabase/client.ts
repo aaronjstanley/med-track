@@ -1,23 +1,22 @@
-import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient as createNeonClient } from "@neon/neon-js/supabase";
 import type { Database } from "@/lib/database.types";
 
-let client: SupabaseClient<Database> | null = null;
+type NeonClient = ReturnType<typeof createNeonClient<Database>>;
+
+let client: NeonClient | null = null;
 
 export function createClient() {
   if (client) return client;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_NEON_URL;
 
-  if (!url || !key) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  if (!url) {
+    throw new Error("Missing NEXT_PUBLIC_NEON_URL");
   }
 
-  client = createSupabaseClient<Database>(url, key, {
+  client = createNeonClient<Database>(url, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
+      allowAnonymous: true,
     },
   });
 

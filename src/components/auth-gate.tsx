@@ -4,7 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { NfcTokenSync } from "@/components/nfc-token-sync";
-import type { User } from "@supabase/supabase-js";
+
+type AuthUser = { id: string };
 
 export function AuthGate({
   children,
@@ -15,7 +16,7 @@ export function AuthGate({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
 
   useEffect(() => {
     const supabase = createClient();
