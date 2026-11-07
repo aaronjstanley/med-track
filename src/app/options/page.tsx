@@ -24,6 +24,11 @@ const links = [
     title: "NFC",
     description: "One-tap Shortcuts setup (no Safari)",
   },
+  {
+    href: "/options/migrate",
+    title: "Move data",
+    description: "Copy your old Supabase data into Neon",
+  },
 ] as const;
 
 function OptionsMenu() {
