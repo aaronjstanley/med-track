@@ -55,7 +55,9 @@ export function LoginForm() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}${
+          process.env.NEXT_PUBLIC_BASE_PATH ?? ""
+        }/`,
       },
     });
 
